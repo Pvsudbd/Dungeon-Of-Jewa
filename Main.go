@@ -364,8 +364,6 @@ func shop(p *player) {
 	}
 }
 
-//fungsi Attack pada battle
-
 func enemyAttack(e *monster, p *player) int {
 	damage := e.attackM - p.Armor
 	if e.attackM <= p.Armor {
@@ -503,12 +501,10 @@ func enemyDrop(c []Consumamble, e []equipment, level int, p *player) {
 		}
 
 	}
-	// fmt.Println("Ini inventory sekarang")
-	// invetokry(p)
 
 }
 
-// fungsi battle
+
 func battle(p *player, M []monster, level int, consum []Consumamble, equip []equipment) int {
 	var aksi int
 	randomIndex := rand.Intn(len(M))
@@ -519,7 +515,7 @@ func battle(p *player, M []monster, level int, consum []Consumamble, equip []equ
 
 	fmt.Printf("kamu bertemu dengan monster: %s\n", e.nama)
 
-	// battle
+	
 
 	for p.HP > 0 && e.hp > 0 {
 		fmt.Printf("%s\n", e.nama)
