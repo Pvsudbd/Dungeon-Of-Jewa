@@ -424,7 +424,7 @@ func Skill(p *player, e *monster) {
 	enemyTurn(p, e)
 }
 
-func enemyDrop(c []Consumamble, e []equipment, level int, p *player) {
+func enemyDrop(c []Consumamble, e []equipment, p *player) {
 	var dropC []Consumamble
 	var dropE []equipment
 	min := 10
@@ -558,7 +558,7 @@ func battle(p *player, M []monster, level int, consum []Consumamble, equip []equ
 
 	}
 
-	enemyDrop(consum, equip, level, p)
+	enemyDrop(consum, equip, p)
 	return 1
 
 }
@@ -986,4 +986,3 @@ func main() {
 
 	}
 }
-
