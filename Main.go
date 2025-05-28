@@ -91,7 +91,7 @@ func bubbleShopA(arr []ShopAjiAW) {
 			}
 		}
 		if !tukar {
-			break
+			return
 		}
 	}
 }
@@ -107,7 +107,7 @@ func bubbleShopC(arr []Consumamble) {
 			}
 		}
 		if !tukar {
-			break
+			return
 		}
 	}
 }
@@ -424,7 +424,7 @@ func Skill(p *player, e *monster) {
 	enemyTurn(p, e)
 }
 
-func enemyDrop(c []Consumamble, e []equipment, p *player) {
+func enemyDrop(c []Consumamble, e []equipment, level int, p *player) {
 	var dropC []Consumamble
 	var dropE []equipment
 	min := 10
@@ -558,7 +558,7 @@ func battle(p *player, M []monster, level int, consum []Consumamble, equip []equ
 
 	}
 
-	enemyDrop(consum, equip, p)
+	enemyDrop(consum, equip, level, p)
 	return 1
 
 }
@@ -697,79 +697,85 @@ func (p *player) usepotion(index int) {
 }
 
 func invetokry(p *player) {
-	insertionequipment(p.inventory)
-	insertionSortPotion(p.Potion)
-	fmt.Println("\n ==== Inventory ====")
-	fmt.Println("-Equipment:")
-	for i, eq := range p.inventory {
-		fmt.Printf("%d. %s (Tipe: %s, Damage: %d, Armor: %d, Cost: %d)\n", i+1, eq.NamaE, eq.TypeE, eq.damage, eq.armour, eq.Cost)
-	}
-
-	fmt.Println("-Potion:")
-	for i, pot := range p.Potion {
-		fmt.Printf("%d. %s (Heal: %d, Mana: %d, Cost: %d)\n", len(p.inventory)+i+1, pot.nama, pot.hp, pot.mana, pot.cost)
-	}
-
-	reader := bufio.NewReader(os.Stdin)
-	fmt.Printf("Cari equipment berdasarkan nama (atau tekan enter untuk skip): \n")
-	input, _ := reader.ReadString('\n')
-	input = strings.TrimSpace(input)
-	if input != "" {
-		item := SequentialInventory(p.inventory, input)
-		if item != nil {
-			fmt.Println("Item ditemukan:", item.NamaE, "(Tipe:", item.TypeE, ", Damage:", item.damage, ", Armor:", item.armour, "Cost", item.Cost, "). Pakai?")
-		} else {
-			fmt.Println("Item tidak ditemukan.")
-		}
-	}
-
-	fmt.Print("Ketik nomer item untuk equip/pakai, atau nama equipment (atau '-1' untuk keluar): ")
-	pilihanRaw, _ := reader.ReadString('\n')
-	pilihan := strings.TrimSpace(pilihanRaw)
-
-	if pilihan == "-1" {
-		return
-	}
-
-	if idx, err := strconv.Atoi(pilihan); err == nil {
-    if idx >= 1 && idx <= len(p.inventory) {
-        before := p.Weapon.NamaE
-        p.Equip(idx - 1)
-        if before != p.Weapon.NamaE {
-            fmt.Println("======== Equipment berhasil dipakai! ========")
-        }
-    } else if idx > len(p.inventory) && idx <= len(p.inventory)+len(p.Potion) {
-        p.usepotion(idx - len(p.inventory) - 1)
-        fmt.Println("======== Potion berhasil dikonsumsi! ========")
-    } else {
-        fmt.Println("Item tidak ditemukan.")
+    insertionequipment(p.inventory)
+    insertionSortPotion(p.Potion)
+    fmt.Println("\n ==== Inventory ====")
+    fmt.Println("-Equipment:")
+    for i, eq := range p.inventory {
+        fmt.Printf("%d. %s (Tipe: %s, Damage: %d, Armor: %d, Cost: %d)\n", i+1, eq.NamaE, eq.TypeE, eq.damage, eq.armour, eq.Cost)
     }
-	} else {
-		item := SequentialInventory(p.inventory, pilihan)
-		if item != nil {
-			for i, eq := range p.inventory {
-				if strings.Contains(strings.ToLower(eq.NamaE), strings.ToLower(pilihan)) {
-					p.Equip(i)
-					fmt.Println("======== Equipment berhasil dipakai! ========")
-					return
-				}
-			}
-		} else {
-			pot := binaryPotion(p.Potion, pilihan)
-			if pot != nil {
-				for i, ptn := range p.Potion {
-					if strings.Contains(strings.ToLower(ptn.nama), strings.ToLower(pilihan)) {
-						p.usepotion(i)
-						fmt.Println("======== Potion berhasil dikonsumsi! ========")
-						return
-					}
-				}
-			} else {
-				fmt.Println("Item tidak ditemukan.")
-			}
-		}
-	}
+
+    fmt.Println("-Potion:")
+    for i, pot := range p.Potion {
+        fmt.Printf("%d. %s (Heal: %d, Mana: %d, Cost: %d)\n", len(p.inventory)+i+1, pot.nama, pot.hp, pot.mana, pot.cost)
+    }
+
+    reader := bufio.NewReader(os.Stdin)
+    fmt.Printf("Cari equipment/potion berdasarkan nama (atau tekan enter untuk skip): \n")
+    input, _ := reader.ReadString('\n')
+    input = strings.TrimSpace(input)
+    if input != "" {
+        item := SequentialInventory(p.inventory, input)
+        if item != nil {
+            fmt.Println("Item ditemukan:", item.NamaE, "(Tipe:", item.TypeE, ", Damage:", item.damage, ", Armor:", item.armour, "Cost", item.Cost, "). Pakai?")
+        } else {
+            pot := binaryPotion(p.Potion, input)
+            if pot != nil {
+                fmt.Println("Potion ditemukan:", pot.nama, "(Heal:", pot.hp, ", Mana:", pot.mana, ", Cost:", pot.cost, "). Pakai?")
+            } else {
+                fmt.Println("Item tidak ditemukan.")
+            }
+        }
+    }
+
+    fmt.Print("Ketik nomer item untuk equip/pakai, atau nama equipment/potion (atau '-1' untuk keluar): ")
+    pilihanRaw, _ := reader.ReadString('\n')
+    pilihan := strings.TrimSpace(pilihanRaw)
+
+    if pilihan == "-1" {
+        return
+    }
+
+    if idx, err := strconv.Atoi(pilihan); err == nil {
+        if idx >= 1 && idx <= len(p.inventory) {
+            before := p.Weapon.NamaE
+            p.Equip(idx - 1)
+            if before != p.Weapon.NamaE {
+                fmt.Println("======== Equipment berhasil dipakai! ========")
+            }
+        } else if idx > len(p.inventory) && idx <= len(p.inventory)+len(p.Potion) {
+            p.usepotion(idx - len(p.inventory) - 1)
+            fmt.Println("======== Potion berhasil dikonsumsi! ========")
+        } else {
+            fmt.Println("Item tidak ditemukan.")
+        }
+    } else {
+        item := SequentialInventory(p.inventory, pilihan)
+        if item != nil {
+            for i, eq := range p.inventory {
+                if strings.EqualFold(eq.NamaE, pilihan) {
+                    p.Equip(i)
+                    fmt.Println("======== Equipment berhasil dipakai! ========")
+                    return
+                }
+            }
+        } else {
+            pot := binaryPotion(p.Potion, pilihan)
+            if pot != nil {
+                for i, ptn := range p.Potion {
+                    if strings.EqualFold(ptn.nama, pilihan) {
+                        p.usepotion(i)
+                        fmt.Println("======== Potion berhasil dikonsumsi! ========")
+                        return
+                    }
+                }
+            } else {
+                fmt.Println("Item tidak ditemukan.")
+            }
+        }
+    }
 }
+
 
 func main() {
 	var next int
@@ -954,7 +960,7 @@ func main() {
 		fmt.Println("===================")
 		if f == 0 {
 			fmt.Println("Keluar dari dungeon...")
-			break
+			return
 		}
 		if f == 1 {
             if level == 15 {
@@ -974,7 +980,7 @@ func main() {
 
 			if next == -1 {
 				fmt.Println("Game Over!")
-				break
+				return
 			}
 			if level%3 == 0 {
 				fmt.Println("======== Shop terbuka! ========")
@@ -986,3 +992,4 @@ func main() {
 
 	}
 }
+
