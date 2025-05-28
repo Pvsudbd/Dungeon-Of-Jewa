@@ -469,7 +469,6 @@ func enemyDrop(c []Consumamble, e []equipment, level int, p *player) {
 					fmt.Println("Kamu Mengambil item :", dropC[i].nama)
 					dropC = append(dropC[:i], dropC[i+1:]...)
 					fmt.Println("OK dapet")
-					continue
 				} else {
 					cek++
 				}
@@ -484,7 +483,6 @@ func enemyDrop(c []Consumamble, e []equipment, level int, p *player) {
 					fmt.Println("Kamu Mengambil item :", dropE[i].NamaE)
 					dropE = append(dropE[:i], dropE[i+1:]...)
 					fmt.Println("OK dapet")
-					continue
 				} else {
 					cek++
 				}
@@ -992,4 +990,3 @@ func main() {
 
 	}
 }
-
