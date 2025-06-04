@@ -18,6 +18,7 @@ type player struct {
 	Armor     int
 	Weapon    equipment
 	ranged    equipment
+
 	Plate     equipment
 	Potion    []Consumamble
 	Skill     skill
@@ -121,6 +122,7 @@ func SequentialAW(cihuy []ShopAjiAW, name string) *ShopAjiAW {
 	return nil
 }
 
+
 func SequentialC(cihuy2 []Consumamble, name string) *Consumamble {
 	for i := 0; i < len(cihuy2); i++ {
 		if cihuy2[i].nama == name {
@@ -129,6 +131,7 @@ func SequentialC(cihuy2 []Consumamble, name string) *Consumamble {
 	}
 	return nil
 }
+
 
 func beliArmor(p *player) {
 	var Armour = []ShopAjiAW{
@@ -167,7 +170,9 @@ func beliArmor(p *player) {
 	var pilih string
 	fmt.Println("=========Your Choice=========")
 	fmt.Print("Masukkan nomor atau nama armor yang ingin dibeli: ")
-	fmt.Scanln(&pilih)
+	reader := bufio.NewReader(os.Stdin)
+	pilihRaw, _ := reader.ReadString('\n')
+	pilih = strings.TrimSpace(pilihRaw)
 	fmt.Printf("=============================\n")
 
 	var itemA *ShopAjiAW
@@ -239,7 +244,9 @@ func beliwepong(p *player) {
 	fmt.Printf("Duit: %d\n", p.Gold)
 	var pilih string
 	fmt.Print("Masukkan nomor atau nama senjata yang ingin dibeli: ")
-	fmt.Scanln(&pilih)
+	reader := bufio.NewReader(os.Stdin)
+    pilihRaw, _ := reader.ReadString('\n')
+    pilih = strings.TrimSpace(pilihRaw)
 	fmt.Printf("=============================\n")
 
 	var item *ShopAjiAW
@@ -313,7 +320,9 @@ func beliConsumable(p *player) {
 	fmt.Printf("Duit:%d\n", p.Gold)
 	var pilih string
 	fmt.Print("Masukkan nomor atau nama potion yang ingin dibeli: ")
-	fmt.Scanln(&pilih)
+	reader := bufio.NewReader(os.Stdin)
+    pilihRaw, _ := reader.ReadString('\n')
+    pilih = strings.TrimSpace(pilihRaw)
 	fmt.Printf("=============================\n")
 
 	var itemB *Consumamble
@@ -389,7 +398,7 @@ func enemyTurn(p *player, e *monster) {
 	}
 	randomIndex := rand.Intn(2)
 	var enemydamage int
-	if e.mana == 0 {
+	if e.mana < e.skill.ManaCost {
 		randomIndex = 0
 	}
 	switch randomIndex {
@@ -425,171 +434,181 @@ func Skill(p *player, e *monster) {
 }
 
 func enemyDrop(c []Consumamble, e []equipment, level int, p *player) {
-	var dropC []Consumamble
-	var dropE []equipment
-	min := 10
-	max := 30
-	rangeSize := max - min + 1
+    var dropC []Consumamble
+    var dropE []equipment
+    min := 10
+    max := 30
+    rangeSize := max - min + 1
 
-	randomGC := rand.Intn(rangeSize) + min
-	p.Gold += randomGC
+    randomGC := rand.Intn(rangeSize) + min
+    p.Gold += randomGC
 
-	for i := 0; i < 5; i++ {
-		randomIndexE := rand.Intn(len(e))
-		dropE = append(dropE, e[randomIndexE])
-		randomIndexC := rand.Intn(len(c))
-		dropC = append(dropC, c[randomIndexC])
+    for i := 0; i < 5; i++ {
+        randomIndexE := rand.Intn(len(e))
+        dropE = append(dropE, e[randomIndexE])
+        randomIndexC := rand.Intn(len(c))
+        dropC = append(dropC, c[randomIndexC])
+    }
 
-	}
+    fmt.Println("Kamu Berhasi Mengalahkan Musuh! dan mendapatkan ", randomGC, " G-Coin")
 
-	fmt.Println("Kamu Berhasi Mengalahkan Musuh! dan mendapatkan ", randomGC, " G-Coin")
+    for i := 0; i < 2; i++ {
+        var cek int
+        var tipe string
+        var namaitem int
 
-	for i := 0; i < 2; i++ {
-		var cek int
-		var tipe string
-		var namaitem int
-		fmt.Println("======== Potion: ========")
-		for i, c := range dropC {
-			fmt.Printf("%d %s Hp: %d damage: %d Mana: %d Armour: %d Harga %d\n", i+1,c.nama, c.hp, c.DamageC, c.mana, c.armor, c.cost)
-		}
-		fmt.Println("======== Equipment ========")
-		for i, e := range dropE {
-			fmt.Printf("%d %s Hp: %d damage: %d Mana: %d Armour: %d Harga %d\n", i+1, e.NamaE,e.hp,e.damage,e.mana,e.armour,e.Cost)
-		}
-		fmt.Print("Pilih Item yang ingin di ambil maks 2, equipment atau potion?(E equipment P potion): ")
-		fmt.Scan(&tipe)
+        // Tabel Potion
+        fmt.Println("======== Potion: ========")
+        fmt.Printf("+-----+---------------------------+--------+--------+--------+------+\n")
+        fmt.Printf("| No. | Nama                      | Heal   | Damage | Mana   | Cost |\n")
+        fmt.Printf("+-----+---------------------------+--------+--------+--------+------+\n")
+        for i, c := range dropC {
+            fmt.Printf("| %-3d | %-25s | %-6d | %-6d | %-6d | %-4d |\n", i+1, c.nama, c.hp, c.DamageC, c.mana, c.cost)
+        }
+        fmt.Printf("+-----+---------------------------+--------+--------+--------+------+\n")
 
-		switch tipe {
-		case "P":
-			fmt.Print("Masukan Nomor Item: ")
-			fmt.Scan(&namaitem)
-			for i := 0; i <= len(c); i++ {
-				if i == namaitem-1 {
-					p.Potion = append(p.Potion, dropC[i])
-					fmt.Println("Kamu Mengambil item :", dropC[i].nama)
-					dropC = append(dropC[:i], dropC[i+1:]...)
-					fmt.Println("OK dapet")
-				} else {
-					cek++
-				}
-			}
-		case "E":
-			fmt.Print("Masukan Nomor Item: ")
-			fmt.Scan(&namaitem)
+        // Tabel Equipment
+        fmt.Println("======== Equipment ========")
+        fmt.Printf("+-----+---------------------------+--------+--------+--------+--------+------+\n")
+        fmt.Printf("| No. | Nama                      | HP     | Damage | Mana   | Armour | Cost |\n")
+        fmt.Printf("+-----+---------------------------+--------+--------+--------+--------+------+\n")
+        for i, e := range dropE {
+            fmt.Printf("| %-3d | %-25s | %-6d | %-6d | %-6d | %-6d | %-4d |\n", i+1, e.NamaE, e.hp, e.damage, e.mana, e.armour, e.Cost)
+        }
+        fmt.Printf("+-----+---------------------------+--------+--------+--------+--------+------+\n")
 
-			for i := 0; i <= len(e); i++ {
-				if i == namaitem-1 {
-					p.inventory = append(p.inventory, dropE[i])
-					fmt.Println("Kamu Mengambil item :", dropE[i].NamaE)
-					dropE = append(dropE[:i], dropE[i+1:]...)
-					fmt.Println("OK dapet")
-				} else {
-					cek++
-				}
+        fmt.Print("Pilih Item yang ingin di ambil maks 2, equipment atau potion?(E equipment P potion): ")
+        fmt.Scan(&tipe)
 
-			}
-		default:
-			fmt.Println("Ketik ulang kamu salah ketik")
-			i--
-		}
+        switch tipe {
+        case "P":
+            fmt.Print("Masukan Nomor Item: ")
+            fmt.Scan(&namaitem)
+            for i := 0; i < len(dropC); i++ {
+                if i == namaitem-1 {
+                    p.Potion = append(p.Potion, dropC[i])
+                    fmt.Println("Kamu Mengambil item :", dropC[i].nama)
+                    dropC = append(dropC[:i], dropC[i+1:]...)
+                    fmt.Println("OK dapet")
+                    break
+                } else {
+                    cek++
+                }
+            }
+        case "E":
+            fmt.Print("Masukan Nomor Item: ")
+            fmt.Scan(&namaitem)
+            for i := 0; i < len(dropE); i++ {
+                if i == namaitem-1 {
+                    p.inventory = append(p.inventory, dropE[i])
+                    fmt.Println("Kamu Mengambil item :", dropE[i].NamaE)
+                    dropE = append(dropE[:i], dropE[i+1:]...)
+                    fmt.Println("OK dapet")
+                    break
+                } else {
+                    cek++
+                }
+            }
+        default:
+            fmt.Println("Ketik ulang kamu salah ketik")
+            i--
+        }
 
-		if cek == len(dropC) && len(dropE) == cek {
-			i--
-			fmt.Println("Barang yang ingin anda ambil tidak ada, coba lagi!")
-		}
-
-	}
-
+        if cek == len(dropC) && len(dropE) == cek {
+            i--
+            fmt.Println("Barang yang ingin anda ambil tidak ada, coba lagi!")
+        }
+    }
 }
 
 
 func battle(p *player, M []monster, level int, consum []Consumamble, equip []equipment) int {
-	var aksi int
-	randomIndex := rand.Intn(len(M))
-	e := M[randomIndex]
-	e.hp += level
-	e.attackM += level
-	e.armour += level
+    var aksi int
+    randomIndex := rand.Intn(len(M))
+    e := M[randomIndex]
+    e.hp += level
+    e.attackM += level
+    e.armour += level
 
-	fmt.Printf("kamu bertemu dengan monster: %s\n", e.nama)
+    fmt.Printf("Kamu bertemu dengan monster: %s\n", e.nama)
+    fmt.Printf("+----------------+----------------------+\n")
+    fmt.Printf("| %-14s | %-20s |\n", "Nama", e.nama)
+    fmt.Printf("| %-14s | %-20d |\n", "HP", e.hp)
+    fmt.Printf("| %-14s | %-20d |\n", "Mana", e.mana)
+    fmt.Printf("| %-14s | %-20d |\n", "Attack", e.attackM)
+    fmt.Printf("| %-14s | %-20d |\n", "Armour", e.armour)
+    fmt.Printf("| %-14s | %-20s |\n", "Nama Skill", e.skill.NamaS)
+    fmt.Printf("| %-14s | %-20d |\n", "Damage Skill", e.skill.damage)
+    fmt.Printf("+----------------+----------------------+\n")
 
-	
+    for p.HP > 0 && e.hp > 0 {
+        fmt.Print("\n=================================\n\n")
+        fmt.Printf("+----------------+----------------------+\n")
+        fmt.Printf("| %-14s | %-20s |\n", "Nama", p.NamaP+" (Kamu)")
+        fmt.Printf("| %-14s | %-20d |\n", "HP", p.HP)
+        fmt.Printf("| %-14s | %-20d |\n", "Mana", p.Mana)
+        fmt.Printf("| %-14s | %-20d |\n", "Attack", p.PAttack)
+        fmt.Printf("| %-14s | %-20d |\n", "Armour", p.Armor)
+        fmt.Printf("+----------------+----------------------+\n")
+        fmt.Println("======== Menu ========")
+        fmt.Println("1. Attack")
+        fmt.Println("2. Skill")
+        fmt.Println("3. Inventory")
+        fmt.Scan(&aksi)
 
-	for p.HP > 0 && e.hp > 0 {
-		fmt.Printf("%s\n", e.nama)
-		fmt.Printf("HP\t\t: %d\n", e.hp)
-		fmt.Printf("Mana\t\t: %d\n", e.mana)
-		fmt.Printf("Attack\t\t: %d\n", e.attackM)
-		fmt.Printf("Armour\t\t: %d\n", e.armour)
-		fmt.Printf("Nama Skill\t: %s\n", e.skill.NamaS)
-		fmt.Printf("Damage Skill\t: %d\n", e.skill.damage)
-		fmt.Print("\n\n=================================\n\n")
-		fmt.Printf("%s (Kamu)\n", p.NamaP)
-		fmt.Printf("HP\t\t: %d\n", p.HP)
-		fmt.Printf("Mana\t\t: %d\n", p.Mana)
-		fmt.Printf("Attack\t\t: %d\n", p.PAttack)
-		fmt.Printf("Armour\t\t: %d\n", p.Armor)
-		fmt.Println("======== Menu ========")
-		fmt.Println("1. Attack")
-		fmt.Println("2. Skill")
-		fmt.Println("3. Inventory")
-		fmt.Scan(&aksi)
+        switch aksi {
+        case 1:
+            attack(p, &e)
+        case 2:
+            if p.Mana < p.Skill.ManaCost {
+                fmt.Println("Mana tidak cukup")
+            } else {
+                Skill(p, &e)
+            }
+        case 3:
+            fmt.Scanln()
+            invetokry(p)
+        }
 
-		switch aksi {
-		case 1:
-			attack(p, &e)
-		case 2:
-			if p.Mana == 0 {
-				fmt.Println("Mana tidak cukup")
-			} else {
-				Skill(p, &e)
-			}
-		case 3:
-			fmt.Scanln()
-			invetokry(p)
-		}
+        if p.HP <= 0 {
+            fmt.Println("Kamu Kalah")
+            return -1
+        }
+    }
 
-		if p.HP <= 0 {
-			fmt.Println("Kamu Kalah")
-			return -1
-		}
-
-	}
-
-	enemyDrop(consum, equip, level, p)
-	return 1
-
+    enemyDrop(consum, equip, level, p)
+    return 1
 }
 
 func (p *player) menu() {
-	for {
-		fmt.Println("\n==== PLAYER INFO ====")
-		fmt.Println("Name\t\t:", p.NamaP)
-		fmt.Println("Attack\t\t:", p.PAttack)
-		fmt.Println("Health\t\t:", p.HP)
-		fmt.Println("Mana\t\t:", p.Mana)
-		fmt.Println("Senjata\t\t:", p.Weapon.NamaE)
-		fmt.Println("Armor\t\t:", p.Plate.NamaE)
-		fmt.Println("Duit\t\t:", p.Gold)
-		fmt.Println("====== Menu ======")
-		fmt.Println("[1] Buka Inventory")
-		fmt.Println("[2] Lanjutkan Petualangan")
-		var pilihan int
-		fmt.Println("===================")
-		fmt.Printf("Masukan Input: ")
-		fmt.Scan(&pilihan)
-		fmt.Println("===================")
+    for {
+        fmt.Println("\n==== PLAYER INFO ====")
+        fmt.Printf("+----------------+----------------------+\n")
+        fmt.Printf("| %-14s | %-20s |\n", "Name", p.NamaP)
+        fmt.Printf("| %-14s | %-20d |\n", "Attack", p.PAttack)
+        fmt.Printf("| %-14s | %-20d |\n", "Health", p.HP)
+        fmt.Printf("| %-14s | %-20d |\n", "Mana", p.Mana)
+        fmt.Printf("| %-14s | %-20s |\n", "Senjata", p.Weapon.NamaE)
+        fmt.Printf("| %-14s | %-20s |\n", "Armor", p.Plate.NamaE)
+        fmt.Printf("| %-14s | %-20d |\n", "Duit", p.Gold)
+        fmt.Printf("+----------------+----------------------+\n")
+        fmt.Println("====== Menu ======")
+        fmt.Println("[1] Buka Inventory")
+        fmt.Println("[2] Lanjutkan Petualangan")
+        var pilihan int
+        fmt.Println("===================")
+        fmt.Printf("Masukan Input: ")
+        fmt.Scan(&pilihan)
+        fmt.Println("===================")
 
-		switch pilihan {
-		case 1:
-			fmt.Scanln()
-			invetokry(p)
-		case 2:
-			return
-
-		}
-
-	}
+        switch pilihan {
+        case 1:
+            fmt.Scanln()
+            invetokry(p)
+        case 2:
+            return
+        }
+    }
 }
 func SequentialInventory(inv []equipment, name string) *equipment {
 	for i := 0; i < len(inv); i++ {
@@ -698,31 +717,66 @@ func invetokry(p *player) {
     insertionequipment(p.inventory)
     insertionSortPotion(p.Potion)
     fmt.Println("\n ==== Inventory ====")
-    fmt.Println("-Equipment:")
+
+    fmt.Printf("+-----+---------------------------+----------+--------+--------+------+\n")
+    fmt.Printf("| No. | Nama                      | Tipe     | Damage | Armor  | Cost |\n")
+    fmt.Printf("+-----+---------------------------+----------+--------+--------+------+\n")
     for i, eq := range p.inventory {
-        fmt.Printf("%d. %s (Tipe: %s, Damage: %d, Armor: %d, Cost: %d)\n", i+1, eq.NamaE, eq.TypeE, eq.damage, eq.armour, eq.Cost)
+        fmt.Printf("| %-3d | %-25s | %-8s | %-6d | %-6d | %-4d |\n", i+1, eq.NamaE, eq.TypeE, eq.damage, eq.armour, eq.Cost)
     }
+    if len(p.inventory) == 0 {
+        fmt.Printf("| %-3s | %-25s | %-8s | %-6s | %-6s | %-4s |\n", "-", "-", "-", "-", "-", "-")
+    }
+    fmt.Printf("+-----+---------------------------+----------+--------+--------+------+\n")
 
     fmt.Println("-Potion:")
+    fmt.Printf("+-----+---------------------------+--------+--------+------+\n")
+    fmt.Printf("| No. | Nama                      | Heal   | Mana   | Cost |\n")
+    fmt.Printf("+-----+---------------------------+--------+--------+------+\n")
     for i, pot := range p.Potion {
-        fmt.Printf("%d. %s (Heal: %d, Mana: %d, Cost: %d)\n", len(p.inventory)+i+1, pot.nama, pot.hp, pot.mana, pot.cost)
+        fmt.Printf("| %-3d | %-25s | %-6d | %-6d | %-4d |\n", len(p.inventory)+i+1, pot.nama, pot.hp, pot.mana, pot.cost)
     }
+    if len(p.Potion) == 0 {
+        fmt.Printf("| %-3s | %-25s | %-6s | %-6s | %-4s |\n", "-", "-", "-", "-", "-")
+    }
+    fmt.Printf("+-----+---------------------------+--------+--------+------+\n")
 
     reader := bufio.NewReader(os.Stdin)
     fmt.Printf("Cari equipment/potion berdasarkan nama (atau tekan enter untuk skip): \n")
     input, _ := reader.ReadString('\n')
     input = strings.TrimSpace(input)
     if input != "" {
-        item := SequentialInventory(p.inventory, input)
-        if item != nil {
-            fmt.Println("Item ditemukan:", item.NamaE, "(Tipe:", item.TypeE, ", Damage:", item.damage, ", Armor:", item.armour, "Cost", item.Cost, "). Pakai?")
-        } else {
-            pot := binaryPotion(p.Potion, input)
-            if pot != nil {
-                fmt.Println("Potion ditemukan:", pot.nama, "(Heal:", pot.hp, ", Mana:", pot.mana, ", Cost:", pot.cost, "). Pakai?")
-            } else {
-                fmt.Println("Item tidak ditemukan.")
+        found := false
+        if len(input) < 5 {
+            // Kode prefix
+            for _, eq := range p.inventory {
+                if strings.HasPrefix(strings.ToLower(eq.NamaE), strings.ToLower(input)) {
+                    fmt.Println("Item ditemukan:", eq.NamaE, "(Tipe:", eq.TypeE, ", Damage:", eq.damage, ", Armor:", eq.armour, "Cost", eq.Cost, ").")
+                    found = true
+                }
             }
+            for _, pot := range p.Potion {
+                if strings.HasPrefix(strings.ToLower(pot.nama), strings.ToLower(input)) {
+                    fmt.Println("Potion ditemukan:", pot.nama, "(Heal:", pot.hp, ", Mana:", pot.mana, ", Cost:", pot.cost, ").")
+                    found = true
+                }
+            }
+        } else {
+            // Wilayah Sequential
+            item := SequentialInventory(p.inventory, input)
+            if item != nil {
+                fmt.Println("Item ditemukan:", item.NamaE, "(Tipe:", item.TypeE, ", Damage:", item.damage, ", Armor:", item.armour, "Cost", item.Cost, ").")
+                found = true
+            } else {
+                pot := binaryPotion(p.Potion, input)
+                if pot != nil {
+                    fmt.Println("Potion ditemukan:", pot.nama, "(Heal:", pot.hp, ", Mana:", pot.mana, ", Cost:", pot.cost, "). Pakai?")
+                    found = true
+                }
+            }
+        }
+        if !found {
+            fmt.Println("Item tidak ditemukan.")
         }
     }
 
@@ -810,7 +864,7 @@ func main() {
 		{nama: "Madura Scavenggers", hp: 90, mana: 20, attackM: 10,armour: 5, skill: skill{NamaS: "Te sateeee!", ManaCost: 20, SkillType: "Physical", damage: 30}},
 		{nama: "Madman", hp: 140, mana: 40, attackM: 20,armour: 10, skill: skill{NamaS: "Weak punch", ManaCost: 20, SkillType: "Physical", damage: 25}},
 		{nama: "Bandit Medan", hp: 120, mana: 10, attackM: 40,armour: 5, skill: skill{NamaS: "BESI!!!!", ManaCost: 10, SkillType: "Physical", damage: 80}},
-		{nama: "Antek Dewa Junggo", hp: 120, mana: 43, attackM: 10,armour: 10, skill: skill{NamaS: "Ku Buru Kau Komdis", ManaCost: 210, SkillType: "Physical", damage:30}},
+		{nama: "Antek Dewa Junggo", hp: 120, mana: 43, attackM: 10,armour: 10, skill: skill{NamaS: "Ku Buru Kau Komdis", ManaCost: 20, SkillType: "Physical", damage:30}},
     }
     
 	var boss = []monster{
@@ -962,7 +1016,7 @@ func main() {
 		}
 		if f == 1 {
             if level == 15 {
-                fmt.Println("Selamat kamu berhasil memenenagkan game ini")
+                fmt.Println("Selamat kamu berhasil memenangkan game ini\nKamu keluar dari dungeon dan berlari ke hantaran sawah yang luas\ntapi itu hanya ilusi karena sebenarnya kamu telah berada di level 20\nComing Soon")
                 return
             }
 			fmt.Print("\n\n\n\n\n")
@@ -990,3 +1044,20 @@ func main() {
 
 	}
 }
+
+
+
+func BubbleSort(arr []int) {
+	n := len(arr)
+	swapped := true
+	for i := 0; i < n-1 && swapped; i++ {
+		swapped = false
+		for j := 0; j < n-i-1; j++ {
+			if arr[j] > arr[j+1] {
+				arr[j], arr[j+1] = arr[j+1], arr[j]
+				swapped = true
+			}
+		}
+	}
+}
+
